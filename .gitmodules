@@ -1,0 +1,6 @@
+[submodule "3rdparty/googletest"]
+	path = 3rdparty/googletest
+	url = https://github.com/google/googletest
+[submodule "3rdparty/mockcpp"]
+	path = 3rdparty/mockcpp
+	url = https://github.com/LeafScript/mockcpp
