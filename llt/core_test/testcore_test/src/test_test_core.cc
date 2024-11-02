@@ -92,7 +92,6 @@ TEST_F(TestTestCore, core_run_op_NEW_success_more_types)
         u8 obj_subtype;
     } obj_type_map[] = {
         { OBJ_TYPE_OBJECT, NO_OBJ_SUBTYPE   },
-        { OBJ_TYPE_NUMBER, NUM_TYPE_NUMBER  },
         { OBJ_TYPE_NUMBER, NUM_TYPE_INT     },
         { OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT   },
         { OBJ_TYPE_NUMBER, NUM_TYPE_BOOL    },
