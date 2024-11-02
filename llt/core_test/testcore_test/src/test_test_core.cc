@@ -46,7 +46,7 @@ TEST_F(TestTestCore, core_init)
     EXPECT_EQ(global_obj->obj_attr.obj_id, GLOBAL_OBJ_ID);
     EXPECT_EQ(global_obj->obj_attr.parent_id, GLOBAL_OBJ_ID);
     EXPECT_EQ(global_obj->obj_attr.child_num, 1);
-    EXPECT_STREQ(global_obj->obj_attr.obj_name, "global_obj");
+    EXPECT_STREQ(global_obj->obj_attr.obj_name, GLOBAL_OBJ_NAME);
 }
 
 TEST_F(TestTestCore, core_run_core_id_unexist)
@@ -114,6 +114,7 @@ TEST_F(TestTestCore, core_run_op_NEW_success_more_types)
         op_info.info.op_new.obj_subtype = obj_type_map[i].obj_subtype;
         ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
         EXPECT_EQ(ret, EC_OK);
+        op_info.info.op_new.parent_id++;
     }
 }
 
@@ -150,6 +151,28 @@ TEST_F(TestTestCore, core_run_op_NEW_parent_id_unexist)
     op_info.info.op_new.parent_id = ROOT_OBJ_ID + 1;
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OBJ_NOT_FOUND);
+}
+
+TEST_F(TestTestCore, core_run_op_NEW_obj_name_exist_under_parent_id)
+{
+    int ret, i;
+
+    test_core_op_NEW_fill(&op_info);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    ASSERT_EQ(ret, EC_OK);
+
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OBJ_NAME_INVALID);
+
+    for (i = 0; i < 10; i++) {
+        op_info.info.op_new.parent_id++;
+        ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+        EXPECT_EQ(ret, EC_OK);
+    }
+
+    op_info.info.op_new.parent_id--;
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OBJ_NAME_INVALID);
 }
 
 TEST_F(TestTestCore, op_test_DEL_success)
@@ -195,13 +218,15 @@ TEST_F(TestTestCore, op_test_FIND_success)
     int ret;
 
     op_info.op = TEST_CORE_OP_FIND;
-    op_info.info.op_find.obj_name = "global_obj";
+    op_info.info.op_find.parent_id = GLOBAL_OBJ_ID;
+    op_info.info.op_find.obj_name = GLOBAL_OBJ_NAME;
     op_info.result.res_find.obj_id = 0;
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
     EXPECT_EQ(op_info.result.res_find.obj_id, GLOBAL_OBJ_ID);
 
-    op_info.info.op_find.obj_name = "root_obj";
+    op_info.info.op_find.parent_id = GLOBAL_OBJ_ID;
+    op_info.info.op_find.obj_name = ROOT_OBJ_NAME;
     op_info.result.res_find.obj_id = 0;
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
@@ -211,12 +236,23 @@ TEST_F(TestTestCore, op_test_FIND_success)
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
+    op_info.info.op_new.parent_id = ROOT_OBJ_ID + 1;
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    ASSERT_EQ(ret, EC_OK);
+
     op_info.op = TEST_CORE_OP_FIND;
+    op_info.info.op_find.parent_id = ROOT_OBJ_ID;
     op_info.info.op_find.obj_name = "test_obj";
     op_info.result.res_find.obj_id = 0;
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
     EXPECT_EQ(op_info.result.res_find.obj_id, ROOT_OBJ_ID + 1);
+
+    op_info.info.op_find.parent_id = ROOT_OBJ_ID + 1;
+    op_info.result.res_find.obj_id = 0;
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
+    EXPECT_EQ(op_info.result.res_find.obj_id, ROOT_OBJ_ID + 2);
 }
 
 TEST_F(TestTestCore, op_test_FIND_obj_name_unexist)
@@ -224,6 +260,7 @@ TEST_F(TestTestCore, op_test_FIND_obj_name_unexist)
     int ret;
 
     op_info.op = TEST_CORE_OP_FIND;
+    op_info.info.op_find.parent_id = ROOT_OBJ_ID;
     op_info.info.op_find.obj_name = "test_obj";
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OBJ_NOT_FOUND);
