@@ -24,8 +24,8 @@ aux_source_directory(${LIB_DIR} SRC_LIST)
 aux_source_directory(${TESTCORE_DIR} SRC_LIST)
 aux_source_directory(. SRC_LIST)
 
-include_directories(${API_DIR} ${INC_DIR} ${LIB_DIR} ${TESTCORE_DIR} ${GTEST_INC_DIR}
-                    ${MOCKCPP_INC_DIR})
+include_directories(${API_DIR} ${INC_DIR} ${LIB_DIR} ${TESTCORE_DIR}
+                    ${GTEST_INC_DIR} ${MOCKCPP_INC_DIR})
 
 add_executable(${PROJ_NAME})
 target_sources(${PROJ_NAME} PRIVATE ${SRC_LIST})
