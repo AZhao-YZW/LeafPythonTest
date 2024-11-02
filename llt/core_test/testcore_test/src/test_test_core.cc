@@ -68,6 +68,7 @@ static void test_core_op_NEW_fill(test_core_op_info_s *op_info)
 
     op_info->op = TEST_CORE_OP_NEW;
     op_info->info.op_new.obj_type = OBJ_TYPE_OBJECT;
+    op_info->info.op_new.obj_subtype = NO_OBJ_SUBTYPE;
     op_info->info.op_new.obj_name = test_obj_name;
     op_info->info.op_new.obj_name_len = sizeof(test_obj_name);
     op_info->info.op_new.parent_id = ROOT_OBJ_ID;
@@ -80,6 +81,56 @@ TEST_F(TestTestCore, core_run_op_NEW_success)
     test_core_op_NEW_fill(&op_info);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
+}
+
+TEST_F(TestTestCore, core_run_op_NEW_success_more_types)
+{
+    static char test_obj_name[] = "test_obj";
+    int ret, i;
+    struct {
+        u8 obj_type;
+        u8 obj_subtype;
+    } obj_type_map[] = {
+        { OBJ_TYPE_OBJECT, NO_OBJ_SUBTYPE   },
+        { OBJ_TYPE_NUMBER, NUM_TYPE_NUMBER  },
+        { OBJ_TYPE_NUMBER, NUM_TYPE_INT     },
+        { OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT   },
+        { OBJ_TYPE_NUMBER, NUM_TYPE_BOOL    },
+        { OBJ_TYPE_BOOL,   NO_OBJ_SUBTYPE   },
+        { OBJ_TYPE_NUMBER, NUM_TYPE_COMPLEX },
+        { OBJ_TYPE_STRING, NO_OBJ_SUBTYPE   },
+        { OBJ_TYPE_LIST,   NO_OBJ_SUBTYPE   },
+        { OBJ_TYPE_TUPLE,  NO_OBJ_SUBTYPE   },
+        { OBJ_TYPE_SET,    NO_OBJ_SUBTYPE   },
+        { OBJ_TYPE_DICT,   NO_OBJ_SUBTYPE   },
+    };
+
+    op_info.op = TEST_CORE_OP_NEW;
+    op_info.info.op_new.obj_name = test_obj_name;
+    op_info.info.op_new.obj_name_len = sizeof(test_obj_name);
+    op_info.info.op_new.parent_id = ROOT_OBJ_ID;
+
+    for (i = 0; i < ARRAY_SIZE(obj_type_map); i++) {
+        op_info.info.op_new.obj_type = obj_type_map[i].obj_type;
+        op_info.info.op_new.obj_subtype = obj_type_map[i].obj_subtype;
+        ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+        EXPECT_EQ(ret, EC_OK);
+    }
+}
+
+TEST_F(TestTestCore, core_run_op_NEW_type_invalid)
+{
+    int ret;
+
+    test_core_op_NEW_fill(&op_info);
+    op_info.info.op_new.obj_type = OBJ_TYPE_MAX;
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OBJ_TYPE_INVALID);
+
+    op_info.info.op_new.obj_type = OBJ_TYPE_OBJECT;
+    op_info.info.op_new.obj_subtype = NO_OBJ_SUBTYPE + 1;
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OBJ_TYPE_INVALID);
 }
 
 TEST_F(TestTestCore, core_run_op_NEW_obj_name_len_exceed)
