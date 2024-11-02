@@ -45,7 +45,7 @@ TEST_F(TestTestCore, core_init)
     EXPECT_EQ(global_obj->obj_attr.layer, GLOBAL_OBJ_LAYER);
     EXPECT_EQ(global_obj->obj_attr.obj_id, GLOBAL_OBJ_ID);
     EXPECT_EQ(global_obj->obj_attr.parent_id, GLOBAL_OBJ_ID);
-    EXPECT_EQ(global_obj->obj_attr.child_num, 0);
+    EXPECT_EQ(global_obj->obj_attr.child_num, 1);
     EXPECT_STREQ(global_obj->obj_attr.obj_name, "global_obj");
 }
 
@@ -62,44 +62,54 @@ TEST_F(TestTestCore, core_run_unsupport_op)
     EXPECT_EQ(ret, EC_UNSUPPORT_OP);
 }
 
-static void test_core_run_op_NEW_success(test_core_op_info_s *op_info)
+static void test_core_op_NEW_fill(test_core_op_info_s *op_info)
 {
-    char test_obj_name[] = "test_obj";
-    int ret;
+    static char test_obj_name[] = "test_obj";
 
     op_info->op = TEST_CORE_OP_NEW;
     op_info->info.op_new.obj_type = OBJ_TYPE_OBJECT;
     op_info->info.op_new.obj_name = test_obj_name;
     op_info->info.op_new.obj_name_len = sizeof(test_obj_name);
     op_info->info.op_new.parent_id = ROOT_OBJ_ID;
-    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, op_info);
-    EXPECT_EQ(ret, EC_OK);
 }
 
 TEST_F(TestTestCore, core_run_op_NEW_success)
 {
-    test_core_run_op_NEW_success(&op_info);
+    int ret;
+
+    test_core_op_NEW_fill(&op_info);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
 }
 
 TEST_F(TestTestCore, core_run_op_NEW_obj_name_len_exceed)
 {
-    char test_obj_name[] = "test_obj";
     int ret;
 
-    op_info.op = TEST_CORE_OP_NEW;
-    op_info.info.op_new.obj_type = OBJ_TYPE_OBJECT;
-    op_info.info.op_new.obj_name = test_obj_name;
+    test_core_op_NEW_fill(&op_info);
     op_info.info.op_new.obj_name_len = LEAFPY_MAX_OBJ_NAME_LEN + 1;
-    op_info.info.op_new.parent_id = ROOT_OBJ_ID;
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OBJ_NAME_LEN_EXCEED);
+}
+
+TEST_F(TestTestCore, core_run_op_NEW_parent_id_unexist)
+{
+    int ret;
+
+    test_core_op_NEW_fill(&op_info);
+    op_info.info.op_new.parent_id = ROOT_OBJ_ID + 1;
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OBJ_NOT_FOUND);
 }
 
 TEST_F(TestTestCore, op_test_DEL_success)
 {
     int ret;
 
-    test_core_run_op_NEW_success(&op_info);
+    test_core_op_NEW_fill(&op_info);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    ASSERT_EQ(ret, EC_OK);
+
     op_info.op = TEST_CORE_OP_DEL;
     op_info.info.op_del.obj_id = 2;
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
@@ -113,7 +123,7 @@ TEST_F(TestTestCore, op_test_DEL_obj_id_unexist)
     op_info.op = TEST_CORE_OP_DEL;
     op_info.info.op_del.obj_id = 2;
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
-    EXPECT_EQ(ret, EC_OBJ_ID_INVALID);
+    EXPECT_EQ(ret, EC_OBJ_NOT_FOUND);
 }
 
 TEST_F(TestTestCore, op_test_DEL_obj_id_not_deletable)
@@ -128,4 +138,43 @@ TEST_F(TestTestCore, op_test_DEL_obj_id_not_deletable)
     op_info.info.op_del.obj_id = 1;
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OBJ_NOT_DELETABLE);
+}
+
+TEST_F(TestTestCore, op_test_FIND_success)
+{
+    int ret;
+
+    op_info.op = TEST_CORE_OP_FIND;
+    op_info.info.op_find.obj_name = "global_obj";
+    op_info.result.res_find.obj_id = 0;
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
+    EXPECT_EQ(op_info.result.res_find.obj_id, GLOBAL_OBJ_ID);
+
+    op_info.info.op_find.obj_name = "root_obj";
+    op_info.result.res_find.obj_id = 0;
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
+    EXPECT_EQ(op_info.result.res_find.obj_id, ROOT_OBJ_ID);
+
+    test_core_op_NEW_fill(&op_info);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    ASSERT_EQ(ret, EC_OK);
+
+    op_info.op = TEST_CORE_OP_FIND;
+    op_info.info.op_find.obj_name = "test_obj";
+    op_info.result.res_find.obj_id = 0;
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
+    EXPECT_EQ(op_info.result.res_find.obj_id, ROOT_OBJ_ID + 1);
+}
+
+TEST_F(TestTestCore, op_test_FIND_obj_name_unexist)
+{
+    int ret;
+
+    op_info.op = TEST_CORE_OP_FIND;
+    op_info.info.op_find.obj_name = "test_obj";
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OBJ_NOT_FOUND);
 }
