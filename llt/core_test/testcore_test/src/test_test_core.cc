@@ -12,6 +12,56 @@ class TestTestCore : public testing::Test {
 protected:
     test_core_op_info_s op_info = {0};
 
+    void op_NEW_fill_object_obj(void)
+    {
+        static char test_obj_name[] = "test_obj";
+
+        op_info.op = TEST_CORE_OP_NEW;
+        op_info.info.op_new.obj_type = OBJ_TYPE_OBJECT;
+        op_info.info.op_new.obj_subtype = NO_OBJ_SUBTYPE;
+        op_info.info.op_new.obj_name = test_obj_name;
+        op_info.info.op_new.obj_name_len = sizeof(test_obj_name);
+        op_info.info.op_new.parent_id = ROOT_OBJ_ID;
+    }
+
+    void op_NEW_fill(u8 parent_id, u8 obj_type, u8 obj_subtype, char *obj_name, u8 obj_name_len)
+    {
+        op_info.op = TEST_CORE_OP_NEW;
+        op_info.info.op_new.obj_type = obj_type;
+        op_info.info.op_new.obj_subtype = obj_subtype;
+        op_info.info.op_new.obj_name = obj_name;
+        op_info.info.op_new.obj_name_len = obj_name_len;
+        op_info.info.op_new.parent_id = parent_id;
+    }
+
+    void op_SET_fill(u8 obj_id, u8 obj_type, u8 obj_subtype, void *set_val)
+    {
+        op_info.op = TEST_CORE_OP_SET;
+        op_info.info.op_set.obj_id = obj_id;
+        op_info.info.op_set.obj_type = obj_type;
+        op_info.info.op_set.obj_subtype = obj_subtype;
+        op_info.info.op_set.obj_val = set_val;
+    }
+
+    void op_GET_fill(u8 obj_id, u8 obj_type, u8 obj_subtype, void *get_val)
+    {
+        op_info.op = TEST_CORE_OP_GET;
+        op_info.info.op_get.obj_id = obj_id;
+        op_info.info.op_get.obj_type = obj_type;
+        op_info.info.op_get.obj_subtype = obj_subtype;
+        op_info.result.res_get.obj_val = get_val;
+    }
+
+    void op_CACL_ADD_fill(u8 obj1_id, u8 obj2_id, void *res_val, u32 val_len)
+    {
+        op_info.op = TEST_CORE_OP_CALC;
+        op_info.info.op_calc.op = CALC_OP_ADD;
+        op_info.info.op_calc.obj1_id = obj1_id;
+        op_info.info.op_calc.obj2_id = obj2_id;
+        op_info.info.op_calc.val_len = val_len;
+        op_info.result.res_calc.obj_val = res_val;
+    }
+
     virtual void SetUp()
     {
         test_core_op_info_s tmp_op_info = {0};
@@ -62,23 +112,11 @@ TEST_F(TestTestCore, core_run_unsupport_op)
     EXPECT_EQ(ret, EC_UNSUPPORT_OP);
 }
 
-static void test_core_op_NEW_fill(test_core_op_info_s *op_info)
-{
-    static char test_obj_name[] = "test_obj";
-
-    op_info->op = TEST_CORE_OP_NEW;
-    op_info->info.op_new.obj_type = OBJ_TYPE_OBJECT;
-    op_info->info.op_new.obj_subtype = NO_OBJ_SUBTYPE;
-    op_info->info.op_new.obj_name = test_obj_name;
-    op_info->info.op_new.obj_name_len = sizeof(test_obj_name);
-    op_info->info.op_new.parent_id = ROOT_OBJ_ID;
-}
-
 TEST_F(TestTestCore, core_run_op_NEW_success)
 {
     int ret;
 
-    test_core_op_NEW_fill(&op_info);
+    op_NEW_fill_object_obj();
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
 }
@@ -122,7 +160,7 @@ TEST_F(TestTestCore, core_run_op_NEW_type_invalid)
 {
     int ret;
 
-    test_core_op_NEW_fill(&op_info);
+    op_NEW_fill_object_obj();
     op_info.info.op_new.obj_type = OBJ_TYPE_MAX;
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OBJ_TYPE_INVALID);
@@ -137,7 +175,7 @@ TEST_F(TestTestCore, core_run_op_NEW_obj_name_len_exceed)
 {
     int ret;
 
-    test_core_op_NEW_fill(&op_info);
+    op_NEW_fill_object_obj();
     op_info.info.op_new.obj_name_len = LEAFPY_MAX_OBJ_NAME_LEN + 1;
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OBJ_NAME_LEN_EXCEED);
@@ -147,7 +185,7 @@ TEST_F(TestTestCore, core_run_op_NEW_parent_id_unexist)
 {
     int ret;
 
-    test_core_op_NEW_fill(&op_info);
+    op_NEW_fill_object_obj();
     op_info.info.op_new.parent_id = ROOT_OBJ_ID + 1;
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OBJ_NOT_FOUND);
@@ -157,7 +195,7 @@ TEST_F(TestTestCore, core_run_op_NEW_obj_name_exist_under_parent_id)
 {
     int ret, i;
 
-    test_core_op_NEW_fill(&op_info);
+    op_NEW_fill_object_obj();
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
@@ -175,11 +213,11 @@ TEST_F(TestTestCore, core_run_op_NEW_obj_name_exist_under_parent_id)
     EXPECT_EQ(ret, EC_OBJ_NAME_INVALID);
 }
 
-TEST_F(TestTestCore, op_test_DEL_success)
+TEST_F(TestTestCore, core_run_op_DEL_success)
 {
     int ret;
 
-    test_core_op_NEW_fill(&op_info);
+    op_NEW_fill_object_obj();
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
@@ -189,7 +227,7 @@ TEST_F(TestTestCore, op_test_DEL_success)
     EXPECT_EQ(ret, EC_OK);
 }
 
-TEST_F(TestTestCore, op_test_DEL_obj_id_unexist)
+TEST_F(TestTestCore, core_run_op_DEL_obj_id_unexist)
 {
     int ret;
 
@@ -199,7 +237,7 @@ TEST_F(TestTestCore, op_test_DEL_obj_id_unexist)
     EXPECT_EQ(ret, EC_OBJ_NOT_FOUND);
 }
 
-TEST_F(TestTestCore, op_test_DEL_obj_id_not_deletable)
+TEST_F(TestTestCore, core_run_op_DEL_obj_id_not_deletable)
 {
     int ret;
 
@@ -213,7 +251,7 @@ TEST_F(TestTestCore, op_test_DEL_obj_id_not_deletable)
     EXPECT_EQ(ret, EC_OBJ_NOT_DELETABLE);
 }
 
-TEST_F(TestTestCore, op_test_FIND_success)
+TEST_F(TestTestCore, core_run_op_FIND_success)
 {
     int ret;
 
@@ -232,7 +270,7 @@ TEST_F(TestTestCore, op_test_FIND_success)
     EXPECT_EQ(ret, EC_OK);
     EXPECT_EQ(op_info.result.res_find.obj_id, ROOT_OBJ_ID);
 
-    test_core_op_NEW_fill(&op_info);
+    op_NEW_fill_object_obj();
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
@@ -255,7 +293,7 @@ TEST_F(TestTestCore, op_test_FIND_success)
     EXPECT_EQ(op_info.result.res_find.obj_id, ROOT_OBJ_ID + 2);
 }
 
-TEST_F(TestTestCore, op_test_FIND_obj_name_unexist)
+TEST_F(TestTestCore, core_run_op_FIND_obj_name_unexist)
 {
     int ret;
 
@@ -264,4 +302,146 @@ TEST_F(TestTestCore, op_test_FIND_obj_name_unexist)
     op_info.info.op_find.obj_name = "test_obj";
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OBJ_NOT_FOUND);
+}
+
+TEST_F(TestTestCore, core_run_op_SET_GET_int_success)
+{
+    static char int_obj_name[] = "int_obj";
+    s64 set_val = 10;
+    s64 get_val = 0;
+    int ret;
+
+    op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_INT, int_obj_name, sizeof(int_obj_name));
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    ASSERT_EQ(ret, EC_OK);
+
+    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &set_val);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
+
+    op_GET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &get_val);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
+    EXPECT_EQ(get_val, 10);
+}
+
+TEST_F(TestTestCore, core_run_op_SET_GET_float_success)
+{
+    static char float_obj_name[] = "float_obj";
+    f64 set_val = 10.123;
+    f64 get_val = 0;
+    int ret;
+
+    op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, float_obj_name, sizeof(float_obj_name));
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    ASSERT_EQ(ret, EC_OK);
+
+    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, &set_val);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
+
+    op_GET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, &get_val);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
+    EXPECT_EQ(get_val, 10.123);
+}
+
+TEST_F(TestTestCore, core_run_op_SET_GET_bool_success)
+{
+    static char bool_obj_name[] = "bool_obj";
+    u8 set_val = 1;
+    u8 get_val = 0;
+    int ret;
+
+    op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_BOOL, bool_obj_name, sizeof(bool_obj_name));
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    ASSERT_EQ(ret, EC_OK);
+
+    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_BOOL, &set_val);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
+
+    op_GET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_BOOL, &get_val);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
+    EXPECT_EQ(get_val, 1);
+}
+
+TEST_F(TestTestCore, core_run_op_SET_GET_String_success)
+{
+    static char String_obj_name[] = "String_obj";
+    char set_val[] = "hello";
+    char *set_val_p = set_val;
+    char *get_val = NULL;
+    int ret;
+
+    op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, String_obj_name, sizeof(String_obj_name));
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    ASSERT_EQ(ret, EC_OK);
+
+    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &set_val_p);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
+
+    op_GET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &get_val);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
+    EXPECT_EQ(get_val, set_val);
+    EXPECT_STREQ(get_val, "hello");
+
+    set_val[0] = 'H';
+    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &set_val_p);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
+
+    op_GET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &get_val);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
+    EXPECT_EQ(get_val, set_val);
+    EXPECT_STREQ(get_val, "Hello");
+}
+
+TEST_F(TestTestCore, core_run_obj_op_proc_obj_id_unexist)
+{
+    static char int_obj_name[] = "int_obj";
+    s64 set_val = 10;
+    s64 get_val = 0;
+    int ret;
+
+    op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_INT, int_obj_name, sizeof(int_obj_name));
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    ASSERT_EQ(ret, EC_OK);
+
+    op_SET_fill(ROOT_OBJ_ID + 2, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &set_val);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OBJ_NOT_FOUND);
+}
+
+TEST_F(TestTestCore, core_run_op_CALC_ADD_int_int_success)
+{
+    static char int_obj1_name[] = "int_obj1";
+    static char int_obj2_name[] = "int_obj2";
+    s64 set_val1 = 123;
+    s64 set_val2 = 456;
+    s64 res_val = 0;
+    int ret;
+
+    op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_INT, int_obj1_name, sizeof(int_obj1_name));
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    ASSERT_EQ(ret, EC_OK);
+    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &set_val1);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    ASSERT_EQ(ret, EC_OK);
+
+    op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_INT, int_obj2_name, sizeof(int_obj2_name));
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    ASSERT_EQ(ret, EC_OK);
+    op_SET_fill(ROOT_OBJ_ID + 2, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &set_val2);
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    ASSERT_EQ(ret, EC_OK);
+
+    op_CACL_ADD_fill(ROOT_OBJ_ID + 1, ROOT_OBJ_ID + 2, &res_val, sizeof(res_val));
+    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
+    EXPECT_EQ(ret, EC_OK);
+    EXPECT_EQ(res_val, 123 + 456);
 }
