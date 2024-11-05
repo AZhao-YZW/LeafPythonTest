@@ -52,12 +52,16 @@ protected:
         op_info.result.res_get.obj_val = get_val;
     }
 
-    void op_CACL_ADD_fill(u8 obj1_id, u8 obj2_id, void *res_val, u32 val_len)
+    void op_CACL_ADD_fill(u8 t1, u8 st1, u8 id1, u8 t2, u8 st2, u8 id2, void *res_val, u32 val_len)
     {
         op_info.op = TEST_CORE_OP_CALC;
         op_info.info.op_calc.op = CALC_OP_ADD;
-        op_info.info.op_calc.obj1_id = obj1_id;
-        op_info.info.op_calc.obj2_id = obj2_id;
+        op_info.info.op_calc.obj1_type = t1;
+        op_info.info.op_calc.obj1_subtype = st1;
+        op_info.info.op_calc.obj1_id = id1;
+        op_info.info.op_calc.obj2_type = t2;
+        op_info.info.op_calc.obj2_subtype = st2;
+        op_info.info.op_calc.obj2_id = id2;
         op_info.info.op_calc.val_len = val_len;
         op_info.result.res_calc.obj_val = res_val;
     }
@@ -440,7 +444,9 @@ TEST_F(TestTestCore, core_run_op_CALC_ADD_int_int_success)
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
-    op_CACL_ADD_fill(ROOT_OBJ_ID + 1, ROOT_OBJ_ID + 2, &res_val, sizeof(res_val));
+    op_CACL_ADD_fill(OBJ_TYPE_NUMBER, NUM_TYPE_INT, ROOT_OBJ_ID + 1,
+                     OBJ_TYPE_NUMBER, NUM_TYPE_INT, ROOT_OBJ_ID + 2,
+                     &res_val, sizeof(res_val));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
     EXPECT_EQ(res_val, 123 + 456);
