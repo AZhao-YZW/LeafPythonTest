@@ -35,13 +35,13 @@ protected:
 TEST_F(TestTestParser, parser_parse_code_success)
 {
     char code[] = "a = 1";
-    int ret = test_parser_parse_code(code, strlen(code));
+    int ret = test_parser_parse_code(code, strlen(code), TEST_FRAME_QUEUE_0);
     EXPECT_EQ(ret, EC_OK);
 }
 
 TEST_F(TestTestParser, parser_parse_code_null)
 {
     char code[] = "a = 1";
-    int ret = test_parser_parse_code(NULL, strlen(code));
+    int ret = test_parser_parse_code(NULL, strlen(code), TEST_FRAME_QUEUE_0);
     EXPECT_EQ(ret, EC_PARAM_INVALID);
 }
