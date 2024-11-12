@@ -21,12 +21,13 @@ protected:
     {
         int ret;
         frame_cb.run_frame = run_frame_stub;
-        ret = test_frame_register(TEST_FRAME_QUEUE_0, LEAFPY_DEFAULT_CORE_ID, &frame_cb);
+        ret = test_frame_register(TEST_FRAME_QUEUE_0, 0, &frame_cb);
         ASSERT_EQ(ret, EC_OK);
     }
 
     virtual void TearDown()
     {
+        test_frame_free_all();
         GlobalMockObject::verify();
     }
 };
