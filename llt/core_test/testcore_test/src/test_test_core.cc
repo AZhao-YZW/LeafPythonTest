@@ -22,6 +22,7 @@ protected:
         op_info.info.op_new.obj_name = test_obj_name;
         op_info.info.op_new.obj_name_len = sizeof(test_obj_name);
         op_info.info.op_new.parent_id = ROOT_OBJ_ID;
+        op_info.result.res_new.obj_id = 0;
     }
 
     void op_NEW_fill(u8 parent_id, u8 obj_type, u8 obj_subtype, char *obj_name, u8 obj_name_len)
@@ -32,6 +33,7 @@ protected:
         op_info.info.op_new.obj_name = obj_name;
         op_info.info.op_new.obj_name_len = obj_name_len;
         op_info.info.op_new.parent_id = parent_id;
+        op_info.result.res_new.obj_id = 0;
     }
 
     void op_SET_fill(u8 obj_id, u8 obj_type, u8 obj_subtype, void *set_val)
@@ -43,12 +45,10 @@ protected:
         op_info.info.op_set.obj_val = set_val;
     }
 
-    void op_GET_fill(u8 obj_id, u8 obj_type, u8 obj_subtype, void *get_val)
+    void op_GET_fill(u8 obj_id, void *get_val)
     {
         op_info.op = TEST_CORE_OP_GET;
         op_info.info.op_get.obj_id = obj_id;
-        op_info.info.op_get.obj_type = obj_type;
-        op_info.info.op_get.obj_subtype = obj_subtype;
         op_info.result.res_get.obj_val = get_val;
     }
 
@@ -161,7 +161,6 @@ TEST_F(TestTestCore, core_run_op_NEW_success_more_types)
         { OBJ_TYPE_NUMBER, NUM_TYPE_INT     },
         { OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT   },
         { OBJ_TYPE_NUMBER, NUM_TYPE_BOOL    },
-        { OBJ_TYPE_BOOL,   NO_OBJ_SUBTYPE   },
         { OBJ_TYPE_NUMBER, NUM_TYPE_COMPLEX },
         { OBJ_TYPE_STRING, NO_OBJ_SUBTYPE   },
         { OBJ_TYPE_LIST,   NO_OBJ_SUBTYPE   },
@@ -347,7 +346,7 @@ TEST_F(TestTestCore, core_run_op_SET_GET_int_success)
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
 
-    op_GET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &get_val);
+    op_GET_fill(ROOT_OBJ_ID + 1, &get_val);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
     EXPECT_EQ(get_val, 10);
@@ -368,7 +367,7 @@ TEST_F(TestTestCore, core_run_op_SET_GET_float_success)
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
 
-    op_GET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, &get_val);
+    op_GET_fill(ROOT_OBJ_ID + 1, &get_val);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
     EXPECT_EQ(get_val, 10.123);
@@ -389,7 +388,7 @@ TEST_F(TestTestCore, core_run_op_SET_GET_bool_success)
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
 
-    op_GET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_BOOL, &get_val);
+    op_GET_fill(ROOT_OBJ_ID + 1, &get_val);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
     EXPECT_EQ(get_val, 1);
@@ -411,7 +410,7 @@ TEST_F(TestTestCore, core_run_op_SET_GET_String_success)
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
 
-    op_GET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &get_val);
+    op_GET_fill(ROOT_OBJ_ID + 1, &get_val);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
     EXPECT_EQ(get_val, set_val);
@@ -422,7 +421,7 @@ TEST_F(TestTestCore, core_run_op_SET_GET_String_success)
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
 
-    op_GET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &get_val);
+    op_GET_fill(ROOT_OBJ_ID + 1, &get_val);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
     EXPECT_EQ(get_val, set_val);
@@ -838,7 +837,7 @@ TEST_F(TestTestCore, core_run_op_CALC_DIV_String_String_invalid)
     EXPECT_EQ(ret, EC_OBJ_TYPE_INVALID);
 }
 
-TEST_F(TestTestCore, core_run_op_LOGIC_EQ_int_success)
+TEST_F(TestTestCore, core_run_op_LOGIC_int_success)
 {
     struct {
         enum test_core_logic_op_e logic_op;
