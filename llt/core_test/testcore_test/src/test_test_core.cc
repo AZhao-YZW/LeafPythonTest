@@ -36,12 +36,10 @@ protected:
         op_info.result.res_new.obj_id = 0;
     }
 
-    void op_SET_fill(u8 obj_id, u8 obj_type, u8 obj_subtype, void *set_val)
+    void op_SET_fill(u8 obj_id, void *set_val)
     {
         op_info.op = TEST_CORE_OP_SET;
         op_info.info.op_set.obj_id = obj_id;
-        op_info.info.op_set.obj_type = obj_type;
-        op_info.info.op_set.obj_subtype = obj_subtype;
         op_info.info.op_set.obj_val = set_val;
     }
 
@@ -82,10 +80,10 @@ protected:
         op_info.result.res_logic.obj_val = res_val;
     }
 
-    void op_SET(u8 obj_id, u8 t, u8 st, void *set_val)
+    void op_SET(u8 obj_id, void *set_val)
     {
         int ret;
-        op_SET_fill(obj_id, t, st, set_val);
+        op_SET_fill(obj_id, set_val);
         ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
         ASSERT_EQ(ret, EC_OK); 
     }
@@ -342,7 +340,7 @@ TEST_F(TestTestCore, core_run_op_SET_GET_int_success)
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &set_val);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
 
@@ -363,7 +361,7 @@ TEST_F(TestTestCore, core_run_op_SET_GET_float_success)
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, &set_val);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
 
@@ -384,7 +382,7 @@ TEST_F(TestTestCore, core_run_op_SET_GET_bool_success)
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_BOOL, &set_val);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
 
@@ -406,7 +404,7 @@ TEST_F(TestTestCore, core_run_op_SET_GET_String_success)
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &set_val_p);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val_p);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
 
@@ -417,7 +415,7 @@ TEST_F(TestTestCore, core_run_op_SET_GET_String_success)
     EXPECT_STREQ(get_val, "hello");
 
     set_val[0] = 'H';
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &set_val_p);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val_p);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OK);
 
@@ -439,7 +437,7 @@ TEST_F(TestTestCore, core_run_op_SET_GET_proc_obj_id_unexist)
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
-    op_SET_fill(ROOT_OBJ_ID + 2, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &set_val);
+    op_SET_fill(ROOT_OBJ_ID + 2, &set_val);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     EXPECT_EQ(ret, EC_OBJ_NOT_FOUND);
 }
@@ -456,14 +454,14 @@ TEST_F(TestTestCore, core_run_op_CALC_ADD_int_int_success)
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_INT, int_obj1_name, sizeof(int_obj1_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &set_val1);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val1);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_INT, int_obj2_name, sizeof(int_obj2_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 2, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &set_val2);
+    op_SET_fill(ROOT_OBJ_ID + 2, &set_val2);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
@@ -488,14 +486,14 @@ TEST_F(TestTestCore, core_run_op_CALC_ADD_float_float_success)
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, float_obj1_name, sizeof(float_obj1_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, &set_val1);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val1);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, float_obj2_name, sizeof(float_obj2_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 2, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, &set_val2);
+    op_SET_fill(ROOT_OBJ_ID + 2, &set_val2);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
@@ -523,14 +521,14 @@ TEST_F(TestTestCore, core_run_op_CALC_ADD_String_String_success)
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, String_obj1_name, sizeof(String_obj1_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &set_val1_p);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val1_p);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, String_obj2_name, sizeof(String_obj2_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 2, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &set_val2_p);
+    op_SET_fill(ROOT_OBJ_ID + 2, &set_val2_p);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
@@ -555,14 +553,14 @@ TEST_F(TestTestCore, core_run_op_CALC_SUB_int_int_success)
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_INT, int_obj1_name, sizeof(int_obj1_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &set_val1);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val1);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_INT, int_obj2_name, sizeof(int_obj2_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 2, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &set_val2);
+    op_SET_fill(ROOT_OBJ_ID + 2, &set_val2);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
@@ -587,14 +585,14 @@ TEST_F(TestTestCore, core_run_op_CALC_SUB_float_float_success)
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, float_obj1_name, sizeof(float_obj1_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, &set_val1);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val1);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, float_obj2_name, sizeof(float_obj2_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 2, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, &set_val2);
+    op_SET_fill(ROOT_OBJ_ID + 2, &set_val2);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
@@ -622,14 +620,14 @@ TEST_F(TestTestCore, core_run_op_CALC_SUB_String_String_invalid)
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, String_obj1_name, sizeof(String_obj1_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &set_val1_p);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val1_p);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, String_obj2_name, sizeof(String_obj2_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 2, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &set_val2_p);
+    op_SET_fill(ROOT_OBJ_ID + 2, &set_val2_p);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
@@ -653,14 +651,14 @@ TEST_F(TestTestCore, core_run_op_CALC_MUL_int_int_success)
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_INT, int_obj1_name, sizeof(int_obj1_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &set_val1);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val1);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_INT, int_obj2_name, sizeof(int_obj2_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 2, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &set_val2);
+    op_SET_fill(ROOT_OBJ_ID + 2, &set_val2);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
@@ -685,14 +683,14 @@ TEST_F(TestTestCore, core_run_op_CALC_MUL_float_float_success)
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, float_obj1_name, sizeof(float_obj1_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, &set_val1);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val1);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, float_obj2_name, sizeof(float_obj2_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 2, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, &set_val2);
+    op_SET_fill(ROOT_OBJ_ID + 2, &set_val2);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
@@ -720,14 +718,14 @@ TEST_F(TestTestCore, core_run_op_CALC_MUL_String_String_invalid)
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, String_obj1_name, sizeof(String_obj1_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &set_val1_p);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val1_p);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, String_obj2_name, sizeof(String_obj2_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 2, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &set_val2_p);
+    op_SET_fill(ROOT_OBJ_ID + 2, &set_val2_p);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
@@ -751,14 +749,14 @@ TEST_F(TestTestCore, core_run_op_CALC_DIV_int_int_success)
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_INT, int_obj1_name, sizeof(int_obj1_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &set_val1);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val1);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_INT, int_obj2_name, sizeof(int_obj2_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 2, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &set_val2);
+    op_SET_fill(ROOT_OBJ_ID + 2, &set_val2);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
@@ -783,14 +781,14 @@ TEST_F(TestTestCore, core_run_op_CALC_DIV_float_float_success)
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, float_obj1_name, sizeof(float_obj1_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, &set_val1);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val1);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, float_obj2_name, sizeof(float_obj2_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 2, OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT, &set_val2);
+    op_SET_fill(ROOT_OBJ_ID + 2, &set_val2);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
@@ -818,14 +816,14 @@ TEST_F(TestTestCore, core_run_op_CALC_DIV_String_String_invalid)
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, String_obj1_name, sizeof(String_obj1_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 1, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &set_val1_p);
+    op_SET_fill(ROOT_OBJ_ID + 1, &set_val1_p);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
     op_NEW_fill(ROOT_OBJ_ID, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, String_obj2_name, sizeof(String_obj2_name));
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
-    op_SET_fill(ROOT_OBJ_ID + 2, OBJ_TYPE_STRING, NO_OBJ_SUBTYPE, &set_val2_p);
+    op_SET_fill(ROOT_OBJ_ID + 2, &set_val2_p);
     ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
     ASSERT_EQ(ret, EC_OK);
 
@@ -886,8 +884,8 @@ TEST_F(TestTestCore, core_run_op_LOGIC_int_success)
 
     for (int i = 0; i < ARRAY_SIZE(logic_op_info); i++) {
         printf("i = %d\n", i);
-        op_SET(ROOT_OBJ_ID + 1, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &logic_op_info[i].set_val1);
-        op_SET(ROOT_OBJ_ID + 2, OBJ_TYPE_NUMBER, NUM_TYPE_INT, &logic_op_info[i].set_val2);
+        op_SET(ROOT_OBJ_ID + 1, &logic_op_info[i].set_val1);
+        op_SET(ROOT_OBJ_ID + 2, &logic_op_info[i].set_val2);
 
         op_LOGIC_fill(logic_op_info[i].logic_op,
                       OBJ_TYPE_NUMBER, NUM_TYPE_INT, ROOT_OBJ_ID + 1,

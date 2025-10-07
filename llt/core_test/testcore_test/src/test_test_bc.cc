@@ -15,10 +15,9 @@ protected:
 
     static int bc_cb(test_bc_s *bc)
     {
-        printf("bc_cb: op[%u] arg1[0x%llx(%llu)] arg2[0x%llx(%llu)] arg3[0x%llx(%llu)] "
-            "bc_res[0x%llx(%llu)] pos[0x%llx] next_pos[0x%llx]\n",
-            bc->op, bc->args.arg[0], bc->args.arg[0], bc->args.arg[1], bc->args.arg[1], bc->args.arg[2],
-            bc->args.arg[2], bc->bc_res, bc->bc_res, bc->pos, bc->next_pos);
+        printf("bc_cb: bc_op[%u] sub_op[%u] parent_id[%u] pos[0x%llx] next_pos[0x%llx] pc[0x%llx]\n",
+            bc->op, bc->sub_op, bc->parent_id, bc->pos, bc->next_pos, pc);
+        test_core_print_obj_list(LEAFPY_DEFAULT_CORE_ID);
         pc++;
         return EC_OK;
     }
@@ -101,14 +100,23 @@ protected:
     int bc_INC(u32 obj_id)
     {
         bc_BC_init(TEST_BC_INC);
-        bc.args.bc_inc.obj_id = obj_id;
+        bc.args.bc_inc_dec.obj_id = obj_id;
         return test_bc_proc(&bc, bc_cb);
     }
 
     int bc_DEC(u32 obj_id)
     {
         bc_BC_init(TEST_BC_DEC);
-        bc.args.bc_inc.obj_id = obj_id;
+        bc.args.bc_inc_dec.obj_id = obj_id;
+        return test_bc_proc(&bc, bc_cb);
+    }
+
+    int bc_CALC(enum test_bc_op_e bc_op, u32 obj_id1, u32 obj_id2, u32 obj_id3)
+    {
+        bc_BC_init(bc_op);
+        bc.args.bc_add_sub_mul_div.obj_id1 = obj_id1;
+        bc.args.bc_add_sub_mul_div.t1.obj_id2 = obj_id2;
+        bc.args.bc_add_sub_mul_div.t1.obj_id3 = obj_id3;
         return test_bc_proc(&bc, bc_cb);
     }
 
@@ -257,4 +265,98 @@ TEST_F(TestTestBC, bc_proc_DEC_float_success)
     EXPECT_EQ(ret, EC_OK);
     val -= 1.0;
     bc_check_obj(obj_id, &val);
+}
+
+TEST_F(TestTestBC, bc_proc_CALC_int_success)
+{
+    u32 obj_id1, obj_id2, obj_id3;
+    struct {
+        enum test_bc_op_e bc_op;
+        s64 val1;
+        s64 val2;
+        s64 val3;
+        s64 exp_val1;
+    } calc_val_map[] = {
+        { TEST_BC_ADD, 123, 456, 789, 456 + 789 },
+        { TEST_BC_SUB, 123, 456, 789, 456 - 789 },
+        { TEST_BC_MUL, 123, 456, 789, 456 * 789 },
+        { TEST_BC_DIV, 123, 45600, 789, 45600 / 789 },
+    };
+    int ret;
+
+    ret = bc_NEW("int1_obj", OBJ_TYPE_NUMBER, NUM_TYPE_INT);
+    ASSERT_EQ(ret, EC_OK);
+    obj_id1 = bc.bc_new_res.obj_id;
+
+    ret = bc_NEW("int2_obj", OBJ_TYPE_NUMBER, NUM_TYPE_INT);
+    ASSERT_EQ(ret, EC_OK);
+    obj_id2 = bc.bc_new_res.obj_id;
+
+    ret = bc_NEW("int3_obj", OBJ_TYPE_NUMBER, NUM_TYPE_INT);
+    ASSERT_EQ(ret, EC_OK);
+    obj_id3 = bc.bc_new_res.obj_id;
+
+    for (int i = 0; i < ARRAY_SIZE(calc_val_map); i++) {
+        ret = bc_MOV_val(obj_id1, &calc_val_map[i].val1);
+        ASSERT_EQ(ret, EC_OK);
+
+        ret = bc_MOV_val(obj_id2, &calc_val_map[i].val2);
+        ASSERT_EQ(ret, EC_OK);
+
+        ret = bc_MOV_val(obj_id3, &calc_val_map[i].val3);
+        ASSERT_EQ(ret, EC_OK);
+        
+        ret = bc_CALC(calc_val_map[i].bc_op, obj_id1, obj_id2, obj_id3);
+        EXPECT_EQ(ret, EC_OK);
+        bc_check_obj(obj_id1, &calc_val_map[i].exp_val1);
+        bc_check_obj(obj_id2, &calc_val_map[i].val2);
+        bc_check_obj(obj_id3, &calc_val_map[i].val3);
+    }
+}
+
+TEST_F(TestTestBC, bc_proc_CALC_float_success)
+{
+    u32 obj_id1, obj_id2, obj_id3;
+    struct {
+        enum test_bc_op_e bc_op;
+        f64 val1;
+        f64 val2;
+        f64 val3;
+        f64 exp_val1;
+    } calc_val_map[] = {
+        { TEST_BC_ADD, 123.123, 456.465, 789.789, 456.465 + 789.789 },
+        { TEST_BC_SUB, 123.123, 456.465, 789.789, 456.465 - 789.789 },
+        { TEST_BC_MUL, 123.123, 456.465, 789.789, 456.465 * 789.789 },
+        { TEST_BC_DIV, 123.123, 456.465, 789.789, 456.465 / 789.789 },
+    };
+    int ret;
+
+    ret = bc_NEW("float1_obj", OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT);
+    ASSERT_EQ(ret, EC_OK);
+    obj_id1 = bc.bc_new_res.obj_id;
+
+    ret = bc_NEW("float2_obj", OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT);
+    ASSERT_EQ(ret, EC_OK);
+    obj_id2 = bc.bc_new_res.obj_id;
+
+    ret = bc_NEW("float3_obj", OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT);
+    ASSERT_EQ(ret, EC_OK);
+    obj_id3 = bc.bc_new_res.obj_id;
+
+    for (int i = 0; i < ARRAY_SIZE(calc_val_map); i++) {
+        ret = bc_MOV_val(obj_id1, &calc_val_map[i].val1);
+        ASSERT_EQ(ret, EC_OK);
+
+        ret = bc_MOV_val(obj_id2, &calc_val_map[i].val2);
+        ASSERT_EQ(ret, EC_OK);
+
+        ret = bc_MOV_val(obj_id3, &calc_val_map[i].val3);
+        ASSERT_EQ(ret, EC_OK);
+        
+        ret = bc_CALC(calc_val_map[i].bc_op, obj_id1, obj_id2, obj_id3);
+        EXPECT_EQ(ret, EC_OK);
+        bc_check_obj(obj_id1, &calc_val_map[i].exp_val1);
+        bc_check_obj(obj_id2, &calc_val_map[i].val2);
+        bc_check_obj(obj_id3, &calc_val_map[i].val3);
+    }
 }
