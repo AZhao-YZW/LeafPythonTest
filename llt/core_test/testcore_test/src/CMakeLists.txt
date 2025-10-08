@@ -5,6 +5,10 @@ project(${PROJ_NAME})
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+set(CMAKE_C_FLAGS_DEBUG "-g -O0")
+
 set(ROOT_DIR ${CMAKE_SOURCE_DIR}/../../../../../)
 
 # test framework

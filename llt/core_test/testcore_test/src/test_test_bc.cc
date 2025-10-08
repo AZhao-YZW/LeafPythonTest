@@ -4,6 +4,7 @@
 extern "C" {
 #include "test_bc.h"
 #include "test_core.h"
+#include "test_obj_type.h"
 #include "error_code.h"
 #include "leafpy_cfg.h"
 }
@@ -57,7 +58,7 @@ protected:
     int bc_NOP(void)
     {
         bc_BC_init(TEST_BC_NOP);
-        return test_bc_proc(&bc, bc_cb);
+        return test_bc_proc(&bc, NULL, bc_cb);
     }
 
     int bc_NEW(const char *obj_name, u8 obj_type, u8 obj_subtype)
@@ -65,24 +66,24 @@ protected:
         bc_BC_init(TEST_BC_NEW);
         bc.args.obj_type1 = obj_type;
         bc.args.obj_subtype1 = obj_subtype;
-        bc.args.bc_new.obj_name = (char *)obj_name;
-        return test_bc_proc(&bc, bc_cb);
+        bc.args.bc_new.obj_name = obj_name;
+        return test_bc_proc(&bc, NULL, bc_cb);
     }
 
     int bc_DEL(u32 obj_id)
     {
         bc_BC_init(TEST_BC_DEL);
-        bc.args.bc_del.obj_id = obj_id;
-        return test_bc_proc(&bc, bc_cb);
+        bc.args.bc_1_arg.obj_id = obj_id;
+        return test_bc_proc(&bc, NULL, bc_cb);
     }
 
     int bc_MOV_obj(u32 obj_id1, u32 obj_id2)
     {
         bc_BC_init(TEST_BC_MOV);
         bc.sub_op = TEST_BC_MOV_OBJ;
-        bc.args.bc_mov.obj_id1 = obj_id1;
-        bc.args.bc_mov.obj_id2 = obj_id2;
-        return test_bc_proc(&bc, bc_cb);
+        bc.args.bc_2_args.obj_id1 = obj_id1;
+        bc.args.bc_2_args.obj_id2 = obj_id2;
+        return test_bc_proc(&bc, NULL, bc_cb);
     }
 
     int bc_MOV_val(u32 obj_id1, const void *val)
@@ -90,9 +91,9 @@ protected:
         int ret;
         bc_BC_init(TEST_BC_MOV);
         bc.sub_op = TEST_BC_MOV_VAL;
-        bc.args.bc_mov.obj_id1 = obj_id1;
-        bc.args.bc_mov.val = val;
-        ret = test_bc_proc(&bc, bc_cb);
+        bc.args.bc_2_args.obj_id1 = obj_id1;
+        bc.args.bc_2_args.val = val;
+        ret = test_bc_proc(&bc, NULL, bc_cb);
         bc_check_obj(obj_id1, val);
         return ret;
     }
@@ -100,24 +101,24 @@ protected:
     int bc_INC(u32 obj_id)
     {
         bc_BC_init(TEST_BC_INC);
-        bc.args.bc_inc_dec.obj_id = obj_id;
-        return test_bc_proc(&bc, bc_cb);
+        bc.args.bc_1_arg.obj_id = obj_id;
+        return test_bc_proc(&bc, NULL, bc_cb);
     }
 
     int bc_DEC(u32 obj_id)
     {
         bc_BC_init(TEST_BC_DEC);
-        bc.args.bc_inc_dec.obj_id = obj_id;
-        return test_bc_proc(&bc, bc_cb);
+        bc.args.bc_1_arg.obj_id = obj_id;
+        return test_bc_proc(&bc, NULL, bc_cb);
     }
 
     int bc_CALC(enum test_bc_op_e bc_op, u32 obj_id1, u32 obj_id2, u32 obj_id3)
     {
         bc_BC_init(bc_op);
-        bc.args.bc_add_sub_mul_div.obj_id1 = obj_id1;
-        bc.args.bc_add_sub_mul_div.t1.obj_id2 = obj_id2;
-        bc.args.bc_add_sub_mul_div.t1.obj_id3 = obj_id3;
-        return test_bc_proc(&bc, bc_cb);
+        bc.args.bc_3_args.obj_id1 = obj_id1;
+        bc.args.bc_3_args.t1.obj_id2 = obj_id2;
+        bc.args.bc_3_args.t1.obj_id3 = obj_id3;
+        return test_bc_proc(&bc, NULL, bc_cb);
     }
 
     virtual void SetUp()
@@ -131,8 +132,9 @@ protected:
 
     virtual void TearDown()
     {
-        GlobalMockObject::verify();
+        test_core_free_all();
         pc = 0;
+        GlobalMockObject::verify();
     }
 };
 
