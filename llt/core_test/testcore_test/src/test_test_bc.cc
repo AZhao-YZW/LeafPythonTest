@@ -121,6 +121,15 @@ protected:
         return test_bc_proc(&bc, NULL, bc_cb);
     }
 
+    int bc_CMP(u32 obj_id1, u32 obj_id2, u32 obj_id3)
+    {
+        bc_BC_init(TEST_BC_CMP);
+        bc.args.bc_3_args.obj_id1 = obj_id1;
+        bc.args.bc_3_args.t1.obj_id2 = obj_id2;
+        bc.args.bc_3_args.t1.obj_id3 = obj_id3;
+        return test_bc_proc(&bc, NULL, bc_cb);
+    }
+
     virtual void SetUp()
     {
         test_bc_s tmp_bc = {0};
@@ -360,5 +369,95 @@ TEST_F(TestTestBC, bc_proc_CALC_float_success)
         bc_check_obj(obj_id1, &calc_val_map[i].exp_val1);
         bc_check_obj(obj_id2, &calc_val_map[i].val2);
         bc_check_obj(obj_id3, &calc_val_map[i].val3);
+    }
+}
+
+TEST_F(TestTestBC, bc_proc_CMP_int_success)
+{
+    u32 obj_id1, obj_id2, obj_id3;
+    struct {
+        s64 val1;
+        s64 val2;
+        s64 val3;
+        s64 exp_val1;
+    } cmp_val_map[] = {
+        { 123, 789, 456, 1 },
+        { 123, 456, 456, 0 },
+        { 123, 456, 789, -1 },
+    };
+    int ret;
+
+    ret = bc_NEW("int1_obj", OBJ_TYPE_NUMBER, NUM_TYPE_INT);
+    ASSERT_EQ(ret, EC_OK);
+    obj_id1 = bc.bc_new_res.obj_id;
+
+    ret = bc_NEW("int2_obj", OBJ_TYPE_NUMBER, NUM_TYPE_INT);
+    ASSERT_EQ(ret, EC_OK);
+    obj_id2 = bc.bc_new_res.obj_id;
+
+    ret = bc_NEW("int3_obj", OBJ_TYPE_NUMBER, NUM_TYPE_INT);
+    ASSERT_EQ(ret, EC_OK);
+    obj_id3 = bc.bc_new_res.obj_id;
+
+    for (int i = 0; i < ARRAY_SIZE(cmp_val_map); i++) {
+        ret = bc_MOV_val(obj_id1, &cmp_val_map[i].val1);
+        ASSERT_EQ(ret, EC_OK);
+
+        ret = bc_MOV_val(obj_id2, &cmp_val_map[i].val2);
+        ASSERT_EQ(ret, EC_OK);
+
+        ret = bc_MOV_val(obj_id3, &cmp_val_map[i].val3);
+        ASSERT_EQ(ret, EC_OK);
+        
+        ret = bc_CMP(obj_id1, obj_id2, obj_id3);
+        EXPECT_EQ(ret, EC_OK);
+        bc_check_obj(obj_id1, &cmp_val_map[i].exp_val1);
+        bc_check_obj(obj_id2, &cmp_val_map[i].val2);
+        bc_check_obj(obj_id3, &cmp_val_map[i].val3);
+    }
+}
+
+TEST_F(TestTestBC, bc_proc_CMP_float_success)
+{
+    u32 obj_id1, obj_id2, obj_id3;
+    struct {
+        s64 val1;
+        f64 val2;
+        f64 val3;
+        s64 exp_val1;
+    } cmp_val_map[] = {
+        { 123, 789.789, 456.465, 1 },
+        { 123, 456.465, 456.465, 0 },
+        { 123, 456.465, 789.789, -1 },
+    };
+    int ret;
+
+    ret = bc_NEW("int1_obj", OBJ_TYPE_NUMBER, NUM_TYPE_INT);
+    ASSERT_EQ(ret, EC_OK);
+    obj_id1 = bc.bc_new_res.obj_id;
+
+    ret = bc_NEW("float2_obj", OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT);
+    ASSERT_EQ(ret, EC_OK);
+    obj_id2 = bc.bc_new_res.obj_id;
+
+    ret = bc_NEW("float3_obj", OBJ_TYPE_NUMBER, NUM_TYPE_FLOAT);
+    ASSERT_EQ(ret, EC_OK);
+    obj_id3 = bc.bc_new_res.obj_id;
+
+    for (int i = 0; i < ARRAY_SIZE(cmp_val_map); i++) {
+        ret = bc_MOV_val(obj_id1, &cmp_val_map[i].val1);
+        ASSERT_EQ(ret, EC_OK);
+
+        ret = bc_MOV_val(obj_id2, &cmp_val_map[i].val2);
+        ASSERT_EQ(ret, EC_OK);
+
+        ret = bc_MOV_val(obj_id3, &cmp_val_map[i].val3);
+        ASSERT_EQ(ret, EC_OK);
+        
+        ret = bc_CMP(obj_id1, obj_id2, obj_id3);
+        EXPECT_EQ(ret, EC_OK);
+        bc_check_obj(obj_id1, &cmp_val_map[i].exp_val1);
+        bc_check_obj(obj_id2, &cmp_val_map[i].val2);
+        bc_check_obj(obj_id3, &cmp_val_map[i].val3);
     }
 }
