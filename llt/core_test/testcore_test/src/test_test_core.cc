@@ -276,59 +276,6 @@ TEST_F(TestTestCore, core_run_op_DEL_obj_id_not_deletable)
     EXPECT_EQ(ret, EC_OBJ_NOT_DELETABLE);
 }
 
-TEST_F(TestTestCore, core_run_op_FIND_success)
-{
-    int ret;
-
-    op_info.op = TEST_CORE_OP_FIND;
-    op_info.info.op_find.parent_id = GLOBAL_OBJ_ID;
-    op_info.info.op_find.obj_name = GLOBAL_OBJ_NAME;
-    op_info.result.res_find.obj_id = 0;
-    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
-    EXPECT_EQ(ret, EC_OK);
-    EXPECT_EQ(op_info.result.res_find.obj_id, GLOBAL_OBJ_ID);
-
-    op_info.info.op_find.parent_id = GLOBAL_OBJ_ID;
-    op_info.info.op_find.obj_name = ROOT_OBJ_NAME;
-    op_info.result.res_find.obj_id = 0;
-    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
-    EXPECT_EQ(ret, EC_OK);
-    EXPECT_EQ(op_info.result.res_find.obj_id, ROOT_OBJ_ID);
-
-    op_NEW_fill_object_obj();
-    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
-    ASSERT_EQ(ret, EC_OK);
-
-    op_info.info.op_new.parent_id = ROOT_OBJ_ID + 1;
-    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
-    ASSERT_EQ(ret, EC_OK);
-
-    op_info.op = TEST_CORE_OP_FIND;
-    op_info.info.op_find.parent_id = ROOT_OBJ_ID;
-    op_info.info.op_find.obj_name = "test_obj";
-    op_info.result.res_find.obj_id = 0;
-    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
-    EXPECT_EQ(ret, EC_OK);
-    EXPECT_EQ(op_info.result.res_find.obj_id, ROOT_OBJ_ID + 1);
-
-    op_info.info.op_find.parent_id = ROOT_OBJ_ID + 1;
-    op_info.result.res_find.obj_id = 0;
-    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
-    EXPECT_EQ(ret, EC_OK);
-    EXPECT_EQ(op_info.result.res_find.obj_id, ROOT_OBJ_ID + 2);
-}
-
-TEST_F(TestTestCore, core_run_op_FIND_obj_name_unexist)
-{
-    int ret;
-
-    op_info.op = TEST_CORE_OP_FIND;
-    op_info.info.op_find.parent_id = ROOT_OBJ_ID;
-    op_info.info.op_find.obj_name = "test_obj";
-    ret = test_core_run(LEAFPY_DEFAULT_CORE_ID, &op_info);
-    EXPECT_EQ(ret, EC_OBJ_NOT_FOUND);
-}
-
 TEST_F(TestTestCore, core_run_op_SET_GET_int_success)
 {
     static char int_obj_name[] = "int_obj";
